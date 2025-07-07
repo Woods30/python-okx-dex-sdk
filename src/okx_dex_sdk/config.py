@@ -9,7 +9,7 @@ class ChainSettings(BaseSettings):
     """单条链的配置"""
 
     rpc_url: str
-    private_key: str
+    private_key: Optional[str] = None
 
 
 class Settings(BaseSettings):
@@ -31,6 +31,9 @@ class Settings(BaseSettings):
 
     # 链特定配置, key 为 chain_id
     chains: Dict[str, ChainSettings] = {}
+
+    bsc_private_key: Optional[str] = None
+    solana_private_key: Optional[str] = None
 
 
 # 创建一个全局可用的配置实例

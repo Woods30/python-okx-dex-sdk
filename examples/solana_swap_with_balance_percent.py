@@ -33,7 +33,7 @@ async def main():
     from_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
     # from_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
     # to_token = "11111111111111111111111111111111"  # SOL
-    amount_to_swap = "0.2"  # 兑换 0.001 SOL
+    balance_percent = "1"  # 兑换 0.001 SOL
     slippage = "0.01"  # 1% 滑点
 
     # 准备：获取代币列表，这是 swap API 的前置要求
@@ -41,18 +41,18 @@ async def main():
     await client.get_tokens(chain_id=chain_id)
 
     # 执行兑换 (SOL -> USDC)
-    print(f"准备执行兑换: {amount_to_swap} SOL -> USDC...")
+    print(f"准备执行兑换: {balance_percent}% SOL -> USDC...")
     swap_params = {
         "chain_id": chain_id,
         "from_token_address": from_token,
         "to_token_address": to_token,
-        "amount": amount_to_swap,
+        "balance_percent": balance_percent,
         "slippage": slippage,
         "user_wallet_address": wallet_address,
         "private_key": private_key,
     }
     try:
-        swap_result = await client.execute_swap(**swap_params)
+        swap_result = await client.execute_swap_via_balance_percent(**swap_params)
         print("Solana 兑换成功!")
         print(f"  - 交易哈希 (txhash): {swap_result.tx_hash}")
         print(f"  - 在 Solscan 上查看: https://solscan.io/tx/{swap_result.tx_hash}")

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
@@ -102,7 +103,7 @@ class OkxDexClient:
         from_token_decimals = await self.get_token_decimals_from_address(
             chain_id=chain_id, token_contract_address=from_token_address
         )
-        raw_amount = int(float(amount) * 10**from_token_decimals)
+        raw_amount = int(Decimal(amount) * 10**from_token_decimals)
         print(f"raw_amount: {raw_amount}")
         return await self.api.get_quote(
             chain_id=chain_id,
@@ -120,6 +121,7 @@ class OkxDexClient:
         amount: str,
         slippage: str,
         user_wallet_address: str,
+        private_key: Optional[str] = None,
     ) -> SwapResult:
         """
         执行兑换。
@@ -133,7 +135,7 @@ class OkxDexClient:
         from_token_decimals = await self.get_token_decimals_from_address(
             chain_id=chain_id, token_contract_address=from_token_address
         )
-        raw_amount = int(float(amount) * 10**from_token_decimals)
+        raw_amount = int(Decimal(amount) * 10**from_token_decimals)
 
         return await handler.execute_swap(
             chain_id=chain_id,
@@ -142,6 +144,7 @@ class OkxDexClient:
             amount=str(raw_amount),
             slippage=slippage,
             user_wallet_address=user_wallet_address,
+            private_key=private_key,
         )
 
     async def execute_swap_via_balance_percent(
@@ -149,9 +152,10 @@ class OkxDexClient:
         chain_id: str,
         from_token_address: str,
         to_token_address: str,
-        balance_percent: float,
+        balance_percent: str,
         slippage: str,
         user_wallet_address: str,
+        private_key: Optional[str] = None,
     ) -> SwapResult:
 
         from_token_balance = await self.get_token_balance(
@@ -165,18 +169,27 @@ class OkxDexClient:
         from_token_decimals = await self.get_token_decimals_from_address(
             chain_id=chain_id, token_contract_address=from_token_address
         )
-        amount = int(
-            from_token_balance.data[0].token_assets[0].balance
+        raw_amount = int(
+            Decimal(from_token_balance.data[0].token_assets[0].balance)
             * 10**from_token_decimals
-            * balance_percent
+            * Decimal(balance_percent)
         )
-        return await self.execute_swap(
+        print(f"raw_amount: {raw_amount}")
+
+        handler = self._get_chain_handler(chain_id)
+        if not hasattr(handler, "execute_swap"):
+            raise NotImplementedError(
+                f"execute_swap is not implemented for chain_id {chain_id}"
+            )
+
+        return await handler.execute_swap(
             chain_id=chain_id,
             from_token_address=from_token_address,
             to_token_address=to_token_address,
-            amount=str(amount),
+            amount=str(raw_amount),
             slippage=slippage,
             user_wallet_address=user_wallet_address,
+            private_key=private_key,
         )
 
     async def approve(
@@ -184,6 +197,8 @@ class OkxDexClient:
         chain_id: str,
         token_contract_address: str,
         approve_amount: str,
+        user_wallet_address: str,
+        private_key: Optional[str] = None,
     ):
         handler = self._get_chain_handler(chain_id)
         if not hasattr(handler, "approve"):
@@ -194,6 +209,8 @@ class OkxDexClient:
             chain_id=chain_id,
             token_contract_address=token_contract_address,
             approve_amount=approve_amount,
+            user_wallet_address=user_wallet_address,
+            private_key=private_key,
         )
 
     async def get_token_balance(

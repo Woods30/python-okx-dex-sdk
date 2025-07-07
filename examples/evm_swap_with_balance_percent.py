@@ -23,14 +23,13 @@ async def main():
         )
         return
 
-    wallet_address = get_wallet_address(
-        ChainType.EVM, settings.chains[chain_id].private_key
-    )
+    private_key = settings.bsc_private_key
+    wallet_address = get_wallet_address(ChainType.EVM, private_key)
     print(f"使用钱包地址: {wallet_address}")
 
     to_token_address = NATIVE_TOKEN_ADDRESS[ChainType.EVM]  # BNB on BSC
     from_token_address = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"  # USDC on BSC
-    amount_percent_to_swap = 1  # 兑换 0.001 BNB
+    amount_percent_to_swap = "1"  # 兑换 0.001 BNB
 
     print(f"准备从 {from_token_address} 兑换到 {to_token_address}")
 
@@ -44,6 +43,7 @@ async def main():
             balance_percent=amount_percent_to_swap,
             slippage="0.01",  # 1% 滑点
             user_wallet_address=wallet_address,
+            private_key=private_key,
         )
         print("   EVM 兑换成功!")
         print(f"     - 交易哈希: {swap_result.tx_hash}")

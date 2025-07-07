@@ -3,7 +3,6 @@ import hmac
 import json
 import urllib.parse
 from datetime import datetime
-from decimal import Decimal
 from typing import Dict, List, Optional
 
 import aiohttp

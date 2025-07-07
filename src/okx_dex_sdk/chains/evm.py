@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from pprint import pprint
+from typing import Optional
 
 from web3 import Web3
 from web3.contract import Contract
@@ -70,21 +71,24 @@ class EvmChain:
         # Add POA middleware for chains like BSC, ankr, etc.
         self.w3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
 
-        if self.private_key:
-            self.account = self.w3.eth.account.from_key(self.private_key)
-
     async def _check_and_approve_token(
         self,
         token_contract: Contract,
         spender_address: str,
         required_amount: int,
         chain_id: str,
+        user_wallet_address: str,
+        private_key: Optional[str] = None,
     ):
         """
         使用合约实例检查代币授权额度，如果不足则在本地构建、发送并等待授权交易。
         """
+        private_key = private_key or self.private_key
+        if not private_key:
+            raise ValueError("执行APPROVE交易需要提供钱包私钥")
+
         current_allowance = token_contract.functions.allowance(
-            self.account.address, spender_address
+            user_wallet_address, spender_address
         ).call()
         print(f"当前代币授权额度: {current_allowance}，所需授权额度: {required_amount}")
 
@@ -95,7 +99,7 @@ class EvmChain:
             )
 
             # 1. 在本地构建 approve 交易
-            nonce = self.w3.eth.get_transaction_count(self.account.address)
+            nonce = self.w3.eth.get_transaction_count(user_wallet_address)
             max_priority_fee_per_gas = self.w3.eth.max_priority_fee
             latest_block = self.w3.eth.get_block("latest")
             base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
@@ -105,7 +109,7 @@ class EvmChain:
                 spender_address, required_amount
             ).build_transaction(
                 {
-                    "from": self.account.address,
+                    "from": user_wallet_address,
                     "nonce": nonce,
                     "maxPriorityFeePerGas": max_priority_fee_per_gas,
                     "maxFeePerGas": max_fee_per_gas,
@@ -115,7 +119,7 @@ class EvmChain:
 
             # 2. 签名并发送
             signed_tx = self.w3.eth.account.sign_transaction(
-                approve_tx_data, self.private_key
+                approve_tx_data, private_key
             )
             tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
             print(f"授权交易已发送: {tx_hash.hex()}. 正在等待确认...")
@@ -132,12 +136,15 @@ class EvmChain:
         amount: str,
         slippage: str,
         user_wallet_address: str,
+        private_key: Optional[str] = None,
     ) -> SwapResult:
         """
         执行 EVM 链上的兑换。
         """
-        if not self.private_key:
-            raise ValueError("A private key is required to execute a swap.")
+        print(f"private_key: {private_key}, self.private_key: {self.private_key}")
+        private_key = private_key or self.private_key
+        if not private_key:
+            raise ValueError("执行SWAP交易需要提供钱包私钥")
 
         # 2. 获取兑换交易数据
         swap_response = await self.api.swap(
@@ -170,10 +177,12 @@ class EvmChain:
                 spender_address=spender_address,
                 required_amount=int(amount),
                 chain_id=chain_id,
+                user_wallet_address=user_wallet_address,
+                private_key=private_key,
             )
 
         # 4. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(self.account.address)
+        nonce = self.w3.eth.get_transaction_count(user_wallet_address)
         max_priority_fee_per_gas = self.w3.eth.max_priority_fee
         latest_block = self.w3.eth.get_block("latest")
         base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
@@ -202,7 +211,7 @@ class EvmChain:
             raise OKXDexSDKException(f"交易模拟失败: {simulation['error']}")
 
         # 5. 签名交易
-        signed_tx = self.w3.eth.account.sign_transaction(tx_params, self.private_key)
+        signed_tx = self.w3.eth.account.sign_transaction(tx_params, private_key)
 
         # 6. 发送交易
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
@@ -222,12 +231,15 @@ class EvmChain:
         chain_id: str,
         token_contract_address: str,
         approve_amount: str,
+        user_wallet_address: str,
+        private_key: Optional[str] = None,
     ):
         """
         执行 EVM 链上的代币授权。
         """
-        if not self.private_key:
-            raise ValueError("A private key is required to approve a token.")
+        private_key = private_key or self.private_key
+        if not private_key:
+            raise ValueError("执行APPROVE交易需要提供钱包私钥")
 
         # 1. 获取授权交易数据
         approve_response = await self.api.approve_transaction(
@@ -242,7 +254,7 @@ class EvmChain:
         tx_data = approve_response.data[0]
 
         # 2. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(self.account.address)
+        nonce = self.w3.eth.get_transaction_count(user_wallet_address)
         max_priority_fee_per_gas = self.w3.eth.max_priority_fee
         latest_block = self.w3.eth.get_block("latest")
         base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
@@ -251,7 +263,7 @@ class EvmChain:
 
         tx_params = {
             "to": self.w3.to_checksum_address(tx_data.dex_contract_address),
-            "from": self.w3.to_checksum_address(self.account.address),
+            "from": self.w3.to_checksum_address(user_wallet_address),
             "gas": int(tx_data.gas_limit),
             "data": tx_data.data,
             "nonce": nonce,
@@ -261,7 +273,7 @@ class EvmChain:
         }
 
         # 3. 签名交易
-        signed_tx = self.w3.eth.account.sign_transaction(tx_params, self.private_key)
+        signed_tx = self.w3.eth.account.sign_transaction(tx_params, private_key)
 
         # 4. 发送交易
         tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
