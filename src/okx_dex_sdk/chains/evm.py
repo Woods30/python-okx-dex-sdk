@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import time
-from decimal import Decimal
 from pprint import pprint
-from typing import Optional
 
 from web3 import Web3
 from web3.contract import Contract
@@ -13,7 +11,7 @@ from okx_dex_sdk.exceptions import OKXDexSDKException
 
 from ..api import OKXDexAPI
 from ..config import ChainSettings
-from ..constants import NATIVE_TOKEN_ADDRESS, ChainId
+from ..constants import NATIVE_TOKEN_ADDRESS, ChainType
 from ..models import SwapResult
 
 # 标准 ERC20 ABI，包含了 decimals, allowance, 和 approve 方法
@@ -161,7 +159,7 @@ class EvmChain:
             raise ValueError(f"Failed to get tx data: {swap_response.msg}")
 
         # 3. 如果是 ERC20 代币，则检查并处理授权
-        if from_token_address.lower() != NATIVE_TOKEN_ADDRESS[chain_id].lower():
+        if from_token_address.lower() != NATIVE_TOKEN_ADDRESS[ChainType.EVM].lower():
             token_contract = self.w3.eth.contract(
                 address=self.w3.to_checksum_address(from_token_address),
                 abi=ERC20_ABI,
@@ -279,7 +277,7 @@ class EvmChain:
         """
         if (
             token_contract_address.lower()
-            == NATIVE_TOKEN_ADDRESS[ChainId.ETHEREUM].lower()
+            == NATIVE_TOKEN_ADDRESS[ChainType.EVM].lower()
         ):
             return 18
 

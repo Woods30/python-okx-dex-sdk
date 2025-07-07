@@ -2,7 +2,7 @@ import asyncio
 
 from okx_dex_sdk.client import OkxDexClient
 from okx_dex_sdk.config import settings
-from okx_dex_sdk.constants import NATIVE_TOKEN_ADDRESS, ChainId
+from okx_dex_sdk.constants import NATIVE_TOKEN_ADDRESS, ChainId, ChainType
 
 
 async def main():
@@ -17,7 +17,7 @@ async def main():
     bsc_chain_id = ChainId.BSC
     if bsc_chain_id in settings.chains:
         # 1. 测试原生代币 (BNB)
-        bnb_address = NATIVE_TOKEN_ADDRESS[bsc_chain_id]
+        bnb_address = NATIVE_TOKEN_ADDRESS[ChainType.EVM]
         # 2. 测试一个 ERC20 代币 (USDC on BSC)
         usdc_on_bsc = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
 
@@ -42,7 +42,7 @@ async def main():
     solana_chain_id = ChainId.SOLANA
     if solana_chain_id in settings.chains:
         # 1. 测试原生代币 (SOL)
-        sol_address = NATIVE_TOKEN_ADDRESS[solana_chain_id]
+        sol_address = NATIVE_TOKEN_ADDRESS[ChainType.SOLANA]
         # 2. 测试一个 SPL 代币 (USDC on Solana)
         usdc_on_sol = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
 

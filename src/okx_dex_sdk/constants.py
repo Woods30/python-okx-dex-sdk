@@ -9,6 +9,8 @@ class ChainType(StrEnum):
     EVM = "evm"
     SOLANA = "solana"
     SUI = "sui"
+    TRON = "tron"
+    TON = "ton"
 
 
 class ChainId(StrEnum):
@@ -41,18 +43,11 @@ class ChainId(StrEnum):
 
 
 NATIVE_TOKEN_ADDRESS = {
-    ChainId.ETHEREUM: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.BSC: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.BASE: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.POLYGON: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.FANTOM: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.AVALANCHE: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.ARBITRUM: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.OPTIMISM: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
-    ChainId.SOLANA: "11111111111111111111111111111111",
-    ChainId.SUI: "0x2::sui::SUI",
-    ChainId.TRON: "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
-    ChainId.TON: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
+    ChainType.EVM: "0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    ChainType.SOLANA: "11111111111111111111111111111111",
+    ChainType.SUI: "0x2::sui::SUI",
+    ChainType.TRON: "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb",
+    ChainType.TON: "EQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM9c",
 }
 
 # Example usage:

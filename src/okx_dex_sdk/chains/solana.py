@@ -12,7 +12,7 @@ from solders.message import MessageV0
 from solders.pubkey import Pubkey
 from solders.transaction import VersionedTransaction
 
-from okx_dex_sdk.constants import NATIVE_TOKEN_ADDRESS, ChainId
+from okx_dex_sdk.constants import NATIVE_TOKEN_ADDRESS, ChainId, ChainType
 
 from ..api import OKXDexAPI
 from ..config import ChainSettings
@@ -193,7 +193,7 @@ class SolanaChain:
         """
         if (
             token_contract_address.lower()
-            == NATIVE_TOKEN_ADDRESS[ChainId.SOLANA].lower()
+            == NATIVE_TOKEN_ADDRESS[ChainType.SOLANA].lower()
         ):
             return 9
 
