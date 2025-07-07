@@ -1,0 +1,39 @@
+[project]
+name = "okx-dex-sdk"
+version = "0.1.0"
+description = "OKX DEX SDK for Python"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+    { name = "Your Name", email = "your@email.com" },
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "aiohttp>=3.9.5",
+    "pydantic>=2.7.4",
+    "pydantic-settings>=2.10.1",
+    "base58>=2.1.1",
+    "solders>=0.23.0",
+    "solana>=0.35.2",
+    "web3>=7.12.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/your-repo/python-okx-dex-sdk"
+"Bug Tracker" = "https://github.com/your-repo/python-okx-dex-sdk/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = []
+
+[tool.hatch.metadata]
+allow-direct-references = true
