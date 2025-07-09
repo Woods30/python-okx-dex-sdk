@@ -146,6 +146,8 @@ class EvmChain:
         if not private_key:
             raise ValueError("执行SWAP交易需要提供钱包私钥")
 
+        user_checksum_address = self.w3.to_checksum_address(user_wallet_address)
+
         # 2. 获取兑换交易数据
         swap_response = await self.api.swap(
             chain_id=chain_id,
@@ -153,7 +155,7 @@ class EvmChain:
             to_token_address=to_token_address,
             amount=amount,
             slippage=slippage,
-            user_wallet_address=user_wallet_address,
+            user_wallet_address=user_checksum_address,
         )
 
         if not swap_response.data:
@@ -177,12 +179,12 @@ class EvmChain:
                 spender_address=spender_address,
                 required_amount=int(amount),
                 chain_id=chain_id,
-                user_wallet_address=user_wallet_address,
+                user_wallet_address=user_checksum_address,
                 private_key=private_key,
             )
 
         # 4. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(user_wallet_address)
+        nonce = self.w3.eth.get_transaction_count(user_checksum_address)
         max_priority_fee_per_gas = self.w3.eth.max_priority_fee
         latest_block = self.w3.eth.get_block("latest")
         base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
@@ -241,6 +243,8 @@ class EvmChain:
         if not private_key:
             raise ValueError("执行APPROVE交易需要提供钱包私钥")
 
+        user_checksum_address = self.w3.to_checksum_address(user_wallet_address)
+
         # 1. 获取授权交易数据
         approve_response = await self.api.approve_transaction(
             chain_id=chain_id,
@@ -254,7 +258,7 @@ class EvmChain:
         tx_data = approve_response.data[0]
 
         # 2. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(user_wallet_address)
+        nonce = self.w3.eth.get_transaction_count(user_checksum_address)
         max_priority_fee_per_gas = self.w3.eth.max_priority_fee
         latest_block = self.w3.eth.get_block("latest")
         base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
@@ -263,7 +267,7 @@ class EvmChain:
 
         tx_params = {
             "to": self.w3.to_checksum_address(tx_data.dex_contract_address),
-            "from": self.w3.to_checksum_address(user_wallet_address),
+            "from": user_checksum_address,
             "gas": int(tx_data.gas_limit),
             "data": tx_data.data,
             "nonce": nonce,
