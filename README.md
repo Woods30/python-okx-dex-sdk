@@ -185,6 +185,46 @@ print(f"交易成功! Tx Hash: {swap_result.tx_hash}")
         python examples/evm_swap.py
         ```
 
+## 🔗 与现有项目集成
+
+当您的主项目也使用了名为 `settings` 的配置对象时，为了避免命名冲突，我们推荐以下几种方式来集成 SDK：
+
+### 方法 1: 使用 `import as` 重命名 (推荐)
+
+在导入时给 SDK 的 `settings` 对象指定一个别名，这是最简单直接的方法。
+
+```python
+# 1. 导入您项目的 settings
+from your_app_config import settings as project_settings
+
+# 2. 导入 SDK 的 settings 并重命名
+from okx_dex_sdk.config import settings as okx_settings
+from okx_dex_sdk.client import OkxDexClient
+
+# 3. 使用各自的配置
+print(f"我的项目配置: {project_settings.SOME_VALUE}")
+client = OkxDexClient(okx_settings)
+```
+
+### 方法 2: 手动创建配置实例
+
+您也可以不导入 SDK 的全局 `settings` 实例，而是导入 `Settings` 类，然后手动创建它。
+
+```python
+# 1. 导入您项目的 settings
+from your_app_config import settings as project_settings
+
+# 2. 导入 SDK 的 Settings 类
+from okx_dex_sdk.config import Settings as OkxDexSettings
+from okx_dex_sdk.client import OkxDexClient
+
+# 3. 为 SDK 创建一个独立的配置实例
+okx_config = OkxDexSettings() # 它会自动读取环境变量
+
+# 4. 初始化客户端
+client = OkxDexClient(okx_config)
+```
+
 ## 📦 打包与发布
 
 本项目使用 `pyproject.toml` 进行配置，遵循最新的 Python 打包标准 (PEP 517/518)。
