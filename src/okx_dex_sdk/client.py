@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
@@ -276,3 +277,13 @@ class OkxDexClient:
         获取代币价格。
         """
         return await self.api.get_token_price(chain_id, token_contract_address)
+
+    async def get_historical_price(
+        self, chain_id: str, token_contract_address: str, target_date: date
+    ) -> Optional[str]:
+        """
+        获取指定代币在特定日期的历史收盘价。
+        """
+        return await self.api.get_historical_price(
+            chain_id, token_contract_address, target_date
+        )

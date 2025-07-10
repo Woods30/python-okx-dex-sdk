@@ -1,4 +1,5 @@
 import asyncio
+from datetime import date
 
 from okx_dex_sdk.client import OkxDexClient
 from okx_dex_sdk.config import settings
@@ -18,11 +19,12 @@ async def main():
     print(f"准备获取链 '{chain_id}' 上的代币价格...")
 
     try:
-        token_price_response = await client.get_token_price(
+        token_price_response = await client.get_historical_price(
             chain_id=chain_id,
             token_contract_address="0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
+            target_date=date(2025, 7, 10),
         )
-        print(token_price_response.price)
+        print(token_price_response)
 
     except Exception as e:
         print(f"获取代币时发生错误: {e}")

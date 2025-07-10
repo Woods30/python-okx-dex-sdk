@@ -2,7 +2,7 @@ import base64
 import hmac
 import json
 import urllib.parse
-from datetime import datetime
+from datetime import date, datetime
 from typing import Dict, List, Optional
 
 import aiohttp
@@ -42,6 +42,7 @@ class OKXDexAPI:
     BROADCAST_TRANSACTION = "api/v5/wallet/pre-transaction/broadcast-transaction"
     GET_TRANSACTION_ORDERS = "api/v5/wallet/post-transaction/orders"
     GET_TOKEN_PRICE = "api/v5/dex/market/price"
+    GET_HISTORICAL_PRICE = "api/v5/dex/index/historical-price"
 
     def __init__(
         self,
@@ -480,3 +481,42 @@ class OKXDexAPI:
 
         response = await self.get(self.GET_TRANSACTION_ORDERS, params)
         return TransactionOrdersResponse(**response)
+
+    async def get_historical_price(
+        self, chain_index: str, token_contract_address: str, target_date: date
+    ) -> Optional[str]:
+        """
+        获取指定代币在特定日期的历史收盘价。
+        使用OKX GET /api/v5/dex/index/historical-price 接口。
+        """
+        path = self.GET_HISTORICAL_PRICE
+
+        begin_dt = datetime.combine(target_date, datetime.min.time())
+        end_dt = datetime.combine(target_date, datetime.max.time())
+
+        begin_ms = str(int(begin_dt.timestamp() * 1000))
+        end_ms = str(int(end_dt.timestamp() * 1000))
+
+        params = {
+            "chainIndex": chain_index,
+            "tokenContractAddress": token_contract_address,
+            "begin": begin_ms,
+            "end": end_ms,
+            "period": "1d",
+            "limit": "1",
+        }
+
+        response = await self.get(path, params=params)
+
+        if response and response.get("code") == "0" and response.get("data"):
+            data_list = response["data"]
+            if data_list and data_list[0].get("prices"):
+                price_info = data_list[0]["prices"][0]
+                price_str = price_info.get("price")
+                if price_str:
+                    return price_str
+
+        print(
+            f"[OKX_DEX] 未能从接口获取 {token_contract_address} 在 {target_date} 的价格。"
+        )
+        return None

@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pprint import pprint
 import traceback
 
 from okx_dex_sdk.client import OkxDexClient
@@ -46,6 +47,7 @@ async def main():
             user_wallet_address=wallet_address,
             private_key=private_key,
         )
+        pprint(swap_result.model_dump())
         print("   EVM 兑换成功!")
         print(f"     - 交易哈希: {swap_result.tx_hash}")
         # 注意: 这里可以根据 chain_id 映射到对应的浏览器
