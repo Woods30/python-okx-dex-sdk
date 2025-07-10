@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import time
 from datetime import date
 from decimal import Decimal
-import time
 from typing import TYPE_CHECKING, Dict, List, Optional, Union
 
 from .api import OKXDexAPI
@@ -106,7 +106,7 @@ class OkxDexClient:
             chain_id=chain_id, token_contract_address=from_token_address
         )
         raw_amount = int(Decimal(amount) * 10**from_token_decimals)
-        print(f"raw_amount: {raw_amount}")
+        # print(f"raw_amount: {raw_amount}")
         return await self.api.get_quote(
             chain_id=chain_id,
             from_token_address=from_token_address,
@@ -176,7 +176,7 @@ class OkxDexClient:
             * 10**from_token_decimals
             * Decimal(balance_percent)
         )
-        print(f"raw_amount: {raw_amount}")
+        # print(f"raw_amount: {raw_amount}")
 
         handler = self._get_chain_handler(chain_id)
         if not hasattr(handler, "execute_swap"):

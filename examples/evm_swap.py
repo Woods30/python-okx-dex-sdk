@@ -1,7 +1,7 @@
 import asyncio
 import os
-from pprint import pprint
 import traceback
+from pprint import pprint
 
 from okx_dex_sdk.client import OkxDexClient
 from okx_dex_sdk.config import settings
@@ -30,7 +30,7 @@ async def main():
     print(f"使用钱包地址: {wallet_address}")
 
     from_token_address = NATIVE_TOKEN_ADDRESS[ChainType.EVM]  # BNB on BSC
-    to_token_address = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"  # USDC on BSC
+    to_token_address = "0x67ee3cb086f8a16f34bee3ca72fad36f7db929e2"  # USDC on BSC
     amount_to_swap = "0.001"  # 兑换 0.001 BNB
 
     print(f"准备从 {from_token_address} 兑换到 {to_token_address}")
@@ -43,7 +43,7 @@ async def main():
             from_token_address=from_token_address,
             to_token_address=to_token_address,
             amount=amount_to_swap,
-            slippage="0.01",  # 1% 滑点
+            slippage="0.1",  # 5% 滑点
             user_wallet_address=wallet_address,
             private_key=private_key,
         )

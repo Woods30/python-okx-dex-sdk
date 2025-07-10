@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 
 class Chain(BaseModel):
-    chain_id: str = Field(..., alias="chainId")
+    chain_id: int = Field(..., alias="chainId")
     chain_name: str = Field(..., alias="chainName")
     dex_token_approve_address: str = Field(..., alias="dexTokenApproveAddress")
 

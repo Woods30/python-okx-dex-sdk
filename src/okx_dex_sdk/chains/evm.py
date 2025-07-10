@@ -74,7 +74,7 @@ class EvmChain:
     async def _check_and_approve_token(
         self,
         token_contract: Contract,
-        spender_address: str,
+        # spender_address: str,
         required_amount: int,
         chain_id: str,
         user_wallet_address: str,
@@ -87,20 +87,22 @@ class EvmChain:
         if not private_key:
             raise ValueError("执行APPROVE交易需要提供钱包私钥")
 
+        dex_contract_address = await self.get_dex_contract_address(chain_id)
+
         current_allowance = token_contract.functions.allowance(
-            user_wallet_address, spender_address
+            user_wallet_address, dex_contract_address
         ).call()
         print(f"当前代币授权额度: {current_allowance}，所需授权额度: {required_amount}")
 
         if current_allowance < required_amount:
             print(
                 f"当前代币授权额度 ({current_allowance}) 低于本次所需 ({required_amount})。"
-                f"正在为代币 {token_contract.address} 向合约 {spender_address} 授权数量: {required_amount}"
+                f"正在为代币 {token_contract.address} 向合约 {dex_contract_address} 授权数量: {required_amount}"
             )
 
             # 1. 在本地构建 approve 交易
             approve_tx_data = token_contract.functions.approve(
-                spender_address, required_amount
+                dex_contract_address, required_amount
             ).build_transaction(
                 {
                     "from": user_wallet_address,
@@ -155,7 +157,7 @@ class EvmChain:
             latest_block = self.w3.eth.get_block("latest")
             base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
             tx_params["maxFeePerGas"] = (
-                int(base_fee_per_gas * 1.2) + tx_params["maxPriorityFeePerGas"]
+                int(base_fee_per_gas * 5) + tx_params["maxPriorityFeePerGas"]
             )
 
         # 3. 估算并填充 gas limit (如果不存在, 尽管模拟步骤已处理)
@@ -227,10 +229,10 @@ class EvmChain:
                 address=self.w3.to_checksum_address(from_token_address),
                 abi=ERC20_ABI,
             )
-            spender_address = self.w3.to_checksum_address(tx_data.to)
+            # spender_address = self.w3.to_checksum_address(tx_data.to)
             await self._check_and_approve_token(
                 token_contract=token_contract,
-                spender_address=spender_address,
+                # spender_address=spender_address,
                 required_amount=int(amount),
                 chain_id=chain_id,
                 user_wallet_address=user_checksum_address,
@@ -293,6 +295,7 @@ class EvmChain:
             "chainId": self.w3.eth.chain_id,
         }
 
+        pprint(tx_params)
         # 3. 签名并发送交易
         tx_hash = await self._execute_evm_transaction(tx_params, private_key)
         return tx_hash
@@ -312,3 +315,13 @@ class EvmChain:
             abi=ERC20_ABI,
         )
         return token_contract.functions.decimals().call()
+
+    async def get_dex_contract_address(self, chain_id: str) -> str:
+        """
+        获取指定链的 DEX 合约地址。
+        """
+        response = await self.api.get_supported_chains(chain_id)
+        if not response.data[0].dex_token_approve_address:
+            raise ValueError(f"Failed to get dex contract address: {response.msg}")
+
+        return response.data[0].dex_token_approve_address

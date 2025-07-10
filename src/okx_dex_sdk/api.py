@@ -203,14 +203,19 @@ class OKXDexAPI:
                 print(f"请求失败: {str(e)}")
                 return {"error": str(e)}
 
-    async def get_supported_chains(self) -> ChainsResponse:
+    async def get_supported_chains(
+        self, chain_id: Optional[str] = None
+    ) -> ChainsResponse:
         """
         获取支持单链交易的链列表。
 
         Returns:
             支持的链及其详细信息列表。
         """
-        response = await self.get(self.SUPPORTED_CHAINS)
+        params = {}
+        if chain_id:
+            params["chainId"] = chain_id
+        response = await self.get(self.SUPPORTED_CHAINS, params)
         chains = ChainsResponse(**response)
         self.chains = chains.data
         return chains

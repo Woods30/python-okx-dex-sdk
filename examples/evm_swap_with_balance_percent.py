@@ -28,7 +28,7 @@ async def main():
     print(f"使用钱包地址: {wallet_address}")
 
     to_token_address = NATIVE_TOKEN_ADDRESS[ChainType.EVM]  # BNB on BSC
-    from_token_address = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"  # USDC on BSC
+    from_token_address = "0x67ee3cb086f8a16f34bee3ca72fad36f7db929e2"  # USDC on BSC
     amount_percent_to_swap = "1"  # 兑换 0.001 BNB
 
     print(f"准备从 {from_token_address} 兑换到 {to_token_address}")
