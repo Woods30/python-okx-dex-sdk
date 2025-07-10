@@ -14,6 +14,7 @@ from .models import (
     SwapResult,
     TokenBalanceRequestItem,
     TokenBalancesResponse,
+    TokenPriceResponse,
     TokensResponse,
 )
 
@@ -267,3 +268,11 @@ class OkxDexClient:
         decimals = await handler.get_token_decimals(token_contract_address)
         self.token_decimals_cache[token_contract_address] = decimals
         return decimals
+
+    async def get_token_price(
+        self, chain_id: str, token_contract_address: str
+    ) -> TokenPriceResponse:
+        """
+        获取代币价格。
+        """
+        return await self.api.get_token_price(chain_id, token_contract_address)

@@ -99,34 +99,89 @@ class EvmChain:
             )
 
             # 1. 在本地构建 approve 交易
-            nonce = self.w3.eth.get_transaction_count(user_wallet_address)
-            max_priority_fee_per_gas = self.w3.eth.max_priority_fee
-            latest_block = self.w3.eth.get_block("latest")
-            base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
-            max_fee_per_gas = int(base_fee_per_gas * 1.2) + max_priority_fee_per_gas
-
             approve_tx_data = token_contract.functions.approve(
                 spender_address, required_amount
             ).build_transaction(
                 {
                     "from": user_wallet_address,
-                    "nonce": nonce,
-                    "maxPriorityFeePerGas": max_priority_fee_per_gas,
-                    "maxFeePerGas": max_fee_per_gas,
                     "chainId": int(chain_id),
                 }
             )
 
             # 2. 签名并发送
-            signed_tx = self.w3.eth.account.sign_transaction(
-                approve_tx_data, private_key
-            )
-            tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-            print(f"授权交易已发送: {tx_hash.hex()}. 正在等待确认...")
-
-            # 3. 等待确认
-            self.w3.eth.wait_for_transaction_receipt(tx_hash)
+            await self._execute_evm_transaction(approve_tx_data, private_key)
             print("授权已确认。")
+
+    async def _execute_evm_transaction(self, tx_params: dict, private_key: str) -> str:
+        """
+        统一执行 EVM 交易的方法，包括模拟、填充nonce/gas、签名、发送和等待确认。
+
+        Args:
+            tx_params: 交易参数字典。
+            private_key: 用于签名的私钥。
+
+        Returns:
+            交易哈希字符串。
+        """
+        if "from" not in tx_params:
+            raise ValueError("交易参数'tx_params'中必须包含 'from' 地址")
+
+        # 0. 在发送交易前进行模拟
+        print("正在模拟交易...")
+        try:
+            # 如果调用者没有提供 gas limit，我们在这里通过模拟估算它
+            if "gas" not in tx_params:
+                estimated_gas = self.w3.eth.estimate_gas(tx_params)
+                tx_params["gas"] = estimated_gas
+
+            # 模拟调用以检查是否会 revert
+            if tx_params.get("data"):
+                self.w3.eth.call(tx_params)
+
+            print(f"✅ 交易模拟成功，预估/设定gas: {tx_params.get('gas')}")
+        except Exception as e:
+            raise OKXDexSDKException(f"交易模拟失败: {e}") from e
+
+        # 1. 填充 nonce (如果不存在)
+        if "nonce" not in tx_params:
+            checksum_from = self.w3.to_checksum_address(tx_params["from"])
+            tx_params["nonce"] = self.w3.eth.get_transaction_count(checksum_from)
+
+        # 2. 填充 EIP-1559 gas 费用 (如果不存在)
+        if "maxPriorityFeePerGas" not in tx_params:
+            tx_params["maxPriorityFeePerGas"] = self.w3.eth.max_priority_fee
+
+        if "maxFeePerGas" not in tx_params:
+            latest_block = self.w3.eth.get_block("latest")
+            base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
+            tx_params["maxFeePerGas"] = (
+                int(base_fee_per_gas * 1.2) + tx_params["maxPriorityFeePerGas"]
+            )
+
+        # 3. 估算并填充 gas limit (如果不存在, 尽管模拟步骤已处理)
+        if "gas" not in tx_params:
+            tx_params["gas"] = self.w3.eth.estimate_gas(tx_params)
+
+        # 4. 签名交易
+        signed_tx = self.w3.eth.account.sign_transaction(tx_params, private_key)
+
+        # 5. 发送交易
+        tx_hash_bytes = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+        tx_hash = tx_hash_bytes.hex()
+        print(f"交易已发送: {tx_hash}. 正在等待确认...")
+
+        # 6. 等待交易确认
+        tx_receipt = self.w3.eth.wait_for_transaction_receipt(
+            tx_hash_bytes, timeout=120
+        )
+
+        if tx_receipt.status != 1:
+            raise OKXDexSDKException(
+                f"交易失败，状态码: {tx_receipt.status}，交易哈希: {tx_receipt['transactionHash'].hex()}"
+            )
+
+        print(f"✅ 交易已确认: {tx_hash}")
+        return tx_hash
 
     async def execute_swap(
         self,
@@ -141,7 +196,6 @@ class EvmChain:
         """
         执行 EVM 链上的兑换。
         """
-        print(f"private_key: {private_key}, self.private_key: {self.private_key}")
         private_key = private_key or self.private_key
         if not private_key:
             raise ValueError("执行SWAP交易需要提供钱包私钥")
@@ -184,13 +238,6 @@ class EvmChain:
             )
 
         # 4. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(user_checksum_address)
-        max_priority_fee_per_gas = self.w3.eth.max_priority_fee
-        latest_block = self.w3.eth.get_block("latest")
-        base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
-        # 使用更平滑的 gas fee 估算策略，避免费用过高
-        max_fee_per_gas = int(base_fee_per_gas * 5) + max_priority_fee_per_gas
-
         tx_params = {
             "from": self.w3.to_checksum_address(tx_data.from_address),
             "to": self.w3.to_checksum_address(tx_data.to),
@@ -198,34 +245,14 @@ class EvmChain:
             # 为 API 返回的 gas limit 增加 50% 的缓冲，防止 "out of gas"
             "gas": int(int(tx_data.gas) * 1.5),
             "data": tx_data.data,
-            "nonce": nonce,
-            "maxPriorityFeePerGas": max_priority_fee_per_gas,
-            "maxFeePerGas": max_fee_per_gas,
             "chainId": self.w3.eth.chain_id,
         }
-        pprint(f"tx_params: {tx_params}")
 
-        # 在发送交易前进行模拟
-        print("正在模拟交易...")
-        simulation = await self.simulate_transaction(tx_params)
-
-        if not simulation["success"]:
-            raise OKXDexSDKException(f"交易模拟失败: {simulation['error']}")
-
-        # 5. 签名交易
-        signed_tx = self.w3.eth.account.sign_transaction(tx_params, private_key)
-
-        # 6. 发送交易
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-
-        # 7. 等待交易确认
-        tx_receipt = self.w3.eth.wait_for_transaction_receipt(tx_hash)
-
-        if tx_receipt.status != 1:
-            raise OKXDexSDKException(f"Transaction failed: {tx_receipt}")
+        # 5. 签名并发送交易 (模拟已内置)
+        tx_hash = await self._execute_evm_transaction(tx_params, private_key)
 
         result_data = router_result.model_dump()
-        result_data["tx_hash"] = tx_hash.hex()
+        result_data["tx_hash"] = tx_hash
         return SwapResult.model_validate(result_data)
 
     async def approve(
@@ -258,34 +285,17 @@ class EvmChain:
         tx_data = approve_response.data[0]
 
         # 2. 构建 EIP-1559 格式的交易
-        nonce = self.w3.eth.get_transaction_count(user_checksum_address)
-        max_priority_fee_per_gas = self.w3.eth.max_priority_fee
-        latest_block = self.w3.eth.get_block("latest")
-        base_fee_per_gas = latest_block.get("baseFeePerGas", 0)
-        # 使用更平滑的 gas fee 估算策略，避免费用过高
-        max_fee_per_gas = int(base_fee_per_gas * 1.2) + max_priority_fee_per_gas
-
         tx_params = {
             "to": self.w3.to_checksum_address(tx_data.dex_contract_address),
             "from": user_checksum_address,
             "gas": int(tx_data.gas_limit),
             "data": tx_data.data,
-            "nonce": nonce,
-            "maxPriorityFeePerGas": max_priority_fee_per_gas,
-            "maxFeePerGas": max_fee_per_gas,
             "chainId": self.w3.eth.chain_id,
         }
 
-        # 3. 签名交易
-        signed_tx = self.w3.eth.account.sign_transaction(tx_params, private_key)
-
-        # 4. 发送交易
-        tx_hash = self.w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-
-        # 5. 等待交易确认
-        self.w3.eth.wait_for_transaction_receipt(tx_hash)
-
-        return tx_hash.hex()
+        # 3. 签名并发送交易
+        tx_hash = await self._execute_evm_transaction(tx_params, private_key)
+        return tx_hash
 
     async def get_token_decimals(self, token_contract_address: str) -> int:
         """
@@ -302,39 +312,3 @@ class EvmChain:
             abi=ERC20_ABI,
         )
         return token_contract.functions.decimals().call()
-
-    async def simulate_transaction(self, tx_params: dict) -> dict:
-        """
-        模拟交易执行，返回模拟结果和gas估算。
-
-        Args:
-            tx_params: 交易参数字典
-
-        Returns:
-            包含模拟结果的字典
-        """
-        simulation_result = {
-            "success": False,
-            "estimated_gas": None,
-            "call_result": None,
-            "error": "",
-        }
-
-        try:
-            # 1. 估算gas使用量
-            estimated_gas = self.w3.eth.estimate_gas(tx_params)
-            simulation_result["estimated_gas"] = estimated_gas
-
-            # 2. 模拟调用（对于有返回值的交易）
-            if tx_params.get("data"):
-                call_result = self.w3.eth.call(tx_params)
-                simulation_result["call_result"] = call_result.hex()
-
-            simulation_result["success"] = True
-            print(f"✅ 交易模拟成功，预估gas: {estimated_gas}")
-        except Exception as e:
-            simulation_result["error"] = str(e)
-            simulation_result["success"] = False
-            print(f"❌ 交易模拟失败: {e}")
-
-        return simulation_result

@@ -19,6 +19,7 @@ from .models import (
     Token,
     TokenBalanceRequestItem,
     TokenBalancesResponse,
+    TokenPriceResponse,
     TokensResponse,
     TransactionOrdersResponse,
 )
@@ -40,6 +41,7 @@ class OKXDexAPI:
     GET_ALL_TOKEN_BALANCES = "api/v5/dex/balance/all-token-balances-by-address"
     BROADCAST_TRANSACTION = "api/v5/wallet/pre-transaction/broadcast-transaction"
     GET_TRANSACTION_ORDERS = "api/v5/wallet/post-transaction/orders"
+    GET_TOKEN_PRICE = "api/v5/dex/market/price"
 
     def __init__(
         self,
@@ -353,6 +355,20 @@ class OKXDexAPI:
             data["excludeRiskToken"] = "1"
         response = await self.post(self.GET_TOKEN_BALANCES, data)
         return TokenBalancesResponse(**response)
+
+    async def get_token_price(
+        self, chain_id: str, token_contract_address: str
+    ) -> TokenPriceResponse:
+        """
+        获取代币价格。
+        """
+        params = {
+            "chainIndex": chain_id,
+            "tokenContractAddress": token_contract_address,
+        }
+        response = await self.post(self.GET_TOKEN_PRICE, params)
+        print(response)
+        return TokenPriceResponse(**response)
 
     async def swap(
         self,

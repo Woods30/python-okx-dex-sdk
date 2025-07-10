@@ -328,3 +328,28 @@ class TokenBalancesResponse(OKXResponse):
 
 class TransactionOrdersResponse(OKXResponse):
     data: List[TransactionOrder]
+
+
+class TokenPriceData(BaseModel):
+    chain_index: str = Field(..., alias="chainIndex")
+    token_contract_address: str = Field(..., alias="tokenContractAddress")
+    time: str = Field(..., alias="time")
+    price: str = Field(..., alias="price")
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class TokenPriceResponse(BaseModel):
+    code: int
+    data: TokenPriceData
+
+    @property
+    def price(self) -> Decimal:
+        """Get token price as Decimal"""
+        return Decimal(self.data.price)
+
+    model_config = {
+        "populate_by_name": True,
+    }
