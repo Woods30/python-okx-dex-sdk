@@ -353,3 +353,47 @@ class TokenPriceResponse(BaseModel):
     model_config = {
         "populate_by_name": True,
     }
+
+
+class TokenDetails(BaseModel):
+    """代币详情模型"""
+
+    symbol: str
+    amount: str
+    token_address: str = Field(..., alias="tokenAddress")
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class SwapHistoryData(BaseModel):
+    """交易历史数据模型"""
+
+    chain_id: str = Field(..., alias="chainId")
+    tx_hash: str = Field(..., alias="txHash")
+    height: str
+    tx_time: str = Field(..., alias="txTime")
+    status: str
+    tx_type: str = Field(..., alias="txType")
+    from_address: str = Field(..., alias="fromAddress")
+    dex_router: str = Field(..., alias="dexRouter")
+    to_address: str = Field(..., alias="toAddress")
+    from_token_details: TokenDetails = Field(..., alias="fromTokenDetails")
+    to_token_details: TokenDetails = Field(..., alias="toTokenDetails")
+    referral_amount: str = Field(..., alias="referralAmount")
+    error_msg: str = Field(..., alias="errorMsg")
+    gas_limit: str = Field(..., alias="gasLimit")
+    gas_used: str = Field(..., alias="gasUsed")
+    gas_price: str = Field(..., alias="gasPrice")
+    tx_fee: str = Field(..., alias="txFee")
+
+    model_config = {
+        "populate_by_name": True,
+    }
+
+
+class SwapHistoryResponse(OKXResponse):
+    """交易历史查询响应模型"""
+
+    data: SwapHistoryData

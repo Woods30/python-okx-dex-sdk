@@ -1,6 +1,7 @@
 import base64
 import hmac
 import json
+from pprint import pprint
 import urllib.parse
 from datetime import date, datetime
 from typing import Dict, List, Optional
@@ -15,6 +16,7 @@ from .models import (
     LiquiditySource,
     LiquiditySourcesResponse,
     QuoteResponse,
+    SwapHistoryResponse,
     SwapResponse,
     Token,
     TokenBalanceRequestItem,
@@ -43,6 +45,7 @@ class OKXDexAPI:
     GET_TRANSACTION_ORDERS = "api/v5/wallet/post-transaction/orders"
     GET_TOKEN_PRICE = "api/v5/dex/market/price"
     GET_HISTORICAL_PRICE = "api/v5/dex/index/historical-price"
+    GET_SWAP_HISTORY = "api/v5/dex/aggregator/history"
 
     def __init__(
         self,
@@ -525,3 +528,35 @@ class OKXDexAPI:
             f"[OKX_DEX] 未能从接口获取 {token_contract_address} 在 {target_date} 的价格。"
         )
         return None
+
+    async def get_swap_history(
+        self,
+        chain_index: str,
+        tx_hash: str,
+        is_from_my_project: Optional[bool] = None,
+    ) -> SwapHistoryResponse:
+        """
+        根据 txhash 查询单链兑换最终交易状态。
+        https://web3.okx.com/zh-hans/build/dev-docs/dex-api/dex-swap-history
+
+        Args:
+            chain_index: 链的唯一标识。如1: Ethereum，更多可查看支持的链列表。
+            tx_hash: 通过 OKX DEX API 发出的兑换交易 hash。
+            is_from_my_project: (可选) 传 true，判断是否来自当前请求的 API Key 下的订单。
+                              不传或传 false，查询任意来自 OKX DEX API 发出的订单。
+
+        Returns:
+            包含交易状态详细信息的响应。
+        """
+        params = {
+            "chainIndex": chain_index,
+            "chainId": chain_index,  # 兼容性参数，即将废弃
+            "txHash": tx_hash,
+        }
+
+        if is_from_my_project is not None:
+            params["isFromMyProject"] = str(is_from_my_project).lower()
+
+        response = await self.get(self.GET_SWAP_HISTORY, params)
+        pprint(response)
+        return SwapHistoryResponse(**response)

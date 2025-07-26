@@ -12,6 +12,7 @@ from .config import Settings
 from .constants import ChainId, ChainType
 from .models import (
     QuoteResponse,
+    SwapHistoryResponse,
     SwapResult,
     TokenBalanceRequestItem,
     TokenBalancesResponse,
@@ -287,3 +288,11 @@ class OkxDexClient:
         return await self.api.get_historical_price(
             chain_id, token_contract_address, target_date
         )
+
+    async def get_swap_history(
+        self, chain_id: str, tx_hash: str, is_from_my_project: bool
+    ) -> SwapHistoryResponse:
+        """
+        获取兑换历史。
+        """
+        return await self.api.get_swap_history(chain_id, tx_hash, is_from_my_project)

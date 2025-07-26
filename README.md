@@ -142,6 +142,42 @@ swap_result = await client.execute_swap_via_balance_percent(
 print(f"交易成功! Tx Hash: {swap_result.tx_hash}")
 ```
 
+### 查询交易状态
+
+你可以使用交易哈希来查询交易的最终状态。
+
+```python
+import asyncio
+from okx_dex_sdk.client import OkxDexClient
+from okx_dex_sdk.config import settings
+
+async def check_transaction_status():
+    client = OkxDexClient(settings)
+
+    # 查询交易状态
+    chain_index = "784"  # Sui 链
+    tx_hash = "5GePcvqEakoUtArW8PHULDSQds95vcgeiTznvbnb8hCV"
+
+    response = await client.api.get_swap_history(
+        chain_index=chain_index,
+        tx_hash=tx_hash,
+        is_from_my_project=False,  # 可选：只查询来自当前API Key的订单
+    )
+
+    if response.code == "0":
+        data = response.data
+        print(f"交易状态: {data.status}")
+        print(f"交易类型: {data.tx_type}")
+        print(f"区块高度: {data.height}")
+        print(f"源代币: {data.from_token_details.symbol}")
+        print(f"目标代币: {data.to_token_details.symbol}")
+        print(f"手续费: {data.tx_fee}")
+    else:
+        print(f"查询失败: {response.msg}")
+
+asyncio.run(check_transaction_status())
+```
+
 ## 📚 使用示例
 
 我们提供了多个示例来演示如何在不同链上进行操作。请查看 `examples/` 目录获取完整、可运行的代码。
@@ -155,6 +191,7 @@ print(f"交易成功! Tx Hash: {swap_result.tx_hash}")
 *   **其他工具**:
     *   `examples/get_tokens.py`: 获取支持的代币列表。
     *   `examples/get_token_balance.py`: 获取指定代币的余额。
+    *   `examples/get_swap_history.py`: 查询交易状态。
 
 ## 快速开始 (开发者)
 
