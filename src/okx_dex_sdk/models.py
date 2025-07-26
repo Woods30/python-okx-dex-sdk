@@ -395,7 +395,11 @@ class SwapHistoryData(BaseModel):
     @property
     def gas_fee(self) -> Decimal:
         """Get gas fee as raw value"""
-        return Decimal(self.gas_used) * Decimal(self.gas_price)
+        if self.gas_used and self.gas_price:
+            return Decimal(self.gas_used) * Decimal(self.gas_price)
+        elif self.tx_fee:
+            return Decimal(self.tx_fee)
+        return Decimal("0")
 
 
 class SwapHistoryResponse(OKXResponse):
