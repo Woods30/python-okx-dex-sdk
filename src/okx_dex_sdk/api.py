@@ -558,5 +558,4 @@ class OKXDexAPI:
             params["isFromMyProject"] = str(is_from_my_project).lower()
 
         response = await self.get(self.GET_SWAP_HISTORY, params)
-        pprint(response)
         return SwapHistoryResponse(**response)

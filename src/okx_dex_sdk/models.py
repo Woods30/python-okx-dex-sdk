@@ -392,6 +392,11 @@ class SwapHistoryData(BaseModel):
         "populate_by_name": True,
     }
 
+    @property
+    def gas_fee(self) -> Decimal:
+        """Get gas fee as raw value"""
+        return Decimal(self.gas_used) * Decimal(self.gas_price)
+
 
 class SwapHistoryResponse(OKXResponse):
     """交易历史查询响应模型"""
