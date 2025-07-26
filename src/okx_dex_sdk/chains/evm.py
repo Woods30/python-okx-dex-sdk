@@ -254,7 +254,7 @@ class EvmChain:
         tx_hash = await self._execute_evm_transaction(tx_params, private_key)
 
         result_data = router_result.model_dump()
-        result_data["tx_hash"] = tx_hash
+        result_data["tx_hash"] = f"0x{tx_hash}"
         return SwapResult.model_validate(result_data)
 
     async def approve(
