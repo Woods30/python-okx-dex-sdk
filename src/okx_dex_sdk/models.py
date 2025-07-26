@@ -401,4 +401,4 @@ class SwapHistoryData(BaseModel):
 class SwapHistoryResponse(OKXResponse):
     """交易历史查询响应模型"""
 
-    data: SwapHistoryData
+    data: Optional[SwapHistoryData]

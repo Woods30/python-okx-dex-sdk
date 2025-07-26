@@ -29,11 +29,11 @@ async def main():
     wallet_address = get_wallet_address(ChainType.SOLANA, private_key)
     print(f"使用钱包地址: {wallet_address}")
 
-    to_token = "11111111111111111111111111111111"  # SOL
-    from_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
+    from_token = "11111111111111111111111111111111"  # SOL
+    to_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
     # from_token = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"  # USDC
     # to_token = "11111111111111111111111111111111"  # SOL
-    amount_to_swap = "0.2"  # 兑换 0.001 SOL
+    amount_to_swap = "0.01"  # 兑换 0.001 SOL
     slippage = "0.01"  # 1% 滑点
 
     # 准备：获取代币列表，这是 swap API 的前置要求

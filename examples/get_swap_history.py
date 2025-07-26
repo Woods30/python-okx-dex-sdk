@@ -17,8 +17,8 @@ async def main():
     client = OkxDexClient(settings)
 
     # 示例参数
-    chain_index = "1"  # Ethereum 链
-    tx_hash = "0xba604c7afbe3ef6f6d102329267266338fe1e303d8561de6c32923fa10a651fe"  # 示例交易哈希
+    chain_index = "56"  # Ethereum 链
+    tx_hash = "0xdb798b42d414b0649c610d5e313e9ff8cb36787403f198526cfc18408ddcf833"  # 示例交易哈希
 
     try:
         print(f"正在查询交易状态...")
