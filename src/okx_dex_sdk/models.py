@@ -406,3 +406,7 @@ class SwapHistoryResponse(OKXResponse):
     """交易历史查询响应模型"""
 
     data: Optional[SwapHistoryData]
+
+    model_config = {
+        "populate_by_name": True,
+    }
