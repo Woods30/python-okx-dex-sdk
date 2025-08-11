@@ -1,9 +1,9 @@
 import base64
 import hmac
 import json
-from pprint import pprint
 import urllib.parse
 from datetime import date, datetime
+from pprint import pprint
 from typing import Dict, List, Optional
 
 import aiohttp
@@ -376,7 +376,7 @@ class OKXDexAPI:
             "tokenContractAddress": token_contract_address,
         }
         response = await self.post(self.GET_TOKEN_PRICE, params)
-        print(response)
+        # print(response)
         return TokenPriceResponse(**response)
 
     async def swap(
@@ -558,4 +558,5 @@ class OKXDexAPI:
             params["isFromMyProject"] = str(is_from_my_project).lower()
 
         response = await self.get(self.GET_SWAP_HISTORY, params)
+        pprint(response)
         return SwapHistoryResponse(**response)

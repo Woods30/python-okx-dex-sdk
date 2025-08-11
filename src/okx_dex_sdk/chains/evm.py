@@ -295,7 +295,7 @@ class EvmChain:
             "chainId": self.w3.eth.chain_id,
         }
 
-        pprint(tx_params)
+        # pprint(tx_params)
         # 3. 签名并发送交易
         tx_hash = await self._execute_evm_transaction(tx_params, private_key)
         return tx_hash

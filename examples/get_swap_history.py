@@ -18,7 +18,7 @@ async def main():
 
     # 示例参数
     chain_index = "56"  # Ethereum 链
-    tx_hash = "0x11249c08fe6895e8c5999f857390dede8f1407c307f2caf41237724f380584c8"  # 示例交易哈希
+    tx_hash = "0xacf2fc74405032b6ff5d9d9d702376b4df61b0b32b2790a10308908692402b18"  # 示例交易哈希
 
     try:
         print(f"正在查询交易状态...")
